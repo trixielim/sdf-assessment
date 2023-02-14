@@ -30,7 +30,6 @@ public class Main {
         InputStream is = socket.getInputStream();
         ObjectInputStream ois = new ObjectInputStream(is);
 
-        // Print float values
         String thisFloat = ois.readUTF();
         System.out.println(thisFloat);
 

@@ -9,7 +9,6 @@ public class DirectoryReader {
         File directory = new File(directoryName);
         File[] files = directory.listFiles();
         for (File file: files) {
-            // ignores directories
             if (file.isFile()) {
                 fileNames.add(directoryName + "/" + file.getName());
             }
