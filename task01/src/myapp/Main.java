@@ -1,7 +1,5 @@
 package myapp;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -14,8 +12,7 @@ public class Main {
 
     public static void writeToSocket(Socket socket, Float mean, Float standardDeviation, String name, String email) throws IOException {
         OutputStream os = socket.getOutputStream();
-        BufferedOutputStream bos = new BufferedOutputStream(os);
-        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        ObjectOutputStream oos = new ObjectOutputStream(os);
         try {
             oos.writeUTF(name);
             oos.writeUTF(email);
@@ -25,21 +22,13 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // don't close here, just close the socket
-//        oos.close();
-//        bos.close();
-//        os.close();
         return;
     }
 
     public static ArrayList<Float> readFromSocket(Socket socket) throws IOException {
-        /**
-         * Reads stream of data from socket
-         */
         ArrayList<Float> data = new ArrayList<Float>();
         InputStream is = socket.getInputStream();
-        BufferedInputStream bis = new BufferedInputStream(is);
-        ObjectInputStream ois = new ObjectInputStream(bis);
+        ObjectInputStream ois = new ObjectInputStream(is);
 
         // Print float values
         String thisFloat = ois.readUTF();
@@ -49,23 +38,12 @@ public class Main {
         for (String currFloat: floats) {
             data.add(Float.parseFloat(currFloat));
         }
-        // don't close here. just close the socket
-//        ois.close();
-//        bis.close();
-//        is.close();
-
         return data;
     }
     public static void readAndWriteToSocket(Socket socket) throws IOException {
-        /**
-         * Overall Task
-         * - Read stream of data
-         * - Write to server
-         */
         ArrayList<Float> data = Main.readFromSocket(socket);
         Float mean = Calculations.calculateMean(data);
         Float standardDeviation = Calculations.calculateStandardDeviation(data);
-        // Update here
         String name = "Lim Yunhui Trixie";
         String email = "trixielyh@gmail.com";
         Main.writeToSocket(socket, mean, standardDeviation, name, email);
