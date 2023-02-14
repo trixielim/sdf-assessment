@@ -37,6 +37,7 @@ public class WordProcessor {
                 wordsInLines.add(cleanedWord);
             }
         }
+
         return wordsInLines;
     }
 

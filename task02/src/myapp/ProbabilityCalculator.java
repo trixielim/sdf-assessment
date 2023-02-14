@@ -6,25 +6,54 @@ import java.util.Collection;
 import java.util.HashMap;
 
 public class ProbabilityCalculator {
-    private ArrayList<String> words = null;
+    private ArrayList<ArrayList<String>> fileWords = null;
     private HashMap<String, HashMap<String, Integer>> wordCountTable = null;
     private HashMap<String, HashMap<String, Double>> wordProbabilityTable = null;
 
     public ProbabilityCalculator(String fileDirectory) throws IOException {
-        this.words = ProbabilityCalculator.getAllWordsInFiles(fileDirectory);
-        this.wordCountTable = ProbabilityCalculator.buildWordCountTable(this.words);
+        this.fileWords = ProbabilityCalculator.getAllWordsInFiles(fileDirectory);
+
+        HashMap<String, HashMap<String, Integer>> overallWordCountTable = new HashMap<String, HashMap<String, Integer>>();
+
+        for (ArrayList<String> singleFileWords: this.fileWords) {
+            HashMap<String, HashMap<String, Integer>> fileWordCountTable = ProbabilityCalculator.buildWordCountTable(singleFileWords);
+            ProbabilityCalculator.updateLeftCountTableWithRightCountTable(overallWordCountTable, fileWordCountTable);
+        }
+        this.wordCountTable = overallWordCountTable;
         this.wordProbabilityTable = ProbabilityCalculator.buildWordProbabilityTable(this.wordCountTable);
     }
 
-    public static ArrayList<String> getAllWordsInFiles(String fileDirectory) throws IOException {
+    public static void updateLeftCountTableWithRightCountTable(HashMap<String, HashMap<String, Integer>> left, HashMap<String, HashMap<String, Integer>> right) {
+        
+        for (HashMap.Entry<String, HashMap<String, Integer>> entry: right.entrySet()) {
+            String rightCurrWord = entry.getKey();
+            HashMap<String, Integer> rightCurrWordCountTable = entry.getValue();
+
+            if (!left.containsKey(rightCurrWord)) {
+                left.put(rightCurrWord, rightCurrWordCountTable);
+            } else {
+                HashMap<String, Integer> leftCurrWordCountTable = left.get(rightCurrWord);
+                for (String nextCurrWord: rightCurrWordCountTable.keySet()) {
+                    if (leftCurrWordCountTable.containsKey(nextCurrWord)) {
+                        leftCurrWordCountTable.put(nextCurrWord, leftCurrWordCountTable.get(nextCurrWord) + rightCurrWordCountTable.get(nextCurrWord));
+                    } else {
+                        leftCurrWordCountTable.put(nextCurrWord, rightCurrWordCountTable.get(nextCurrWord));
+                    }
+                }
+            }
+        }
+    }
+
+    public static ArrayList<ArrayList<String>> getAllWordsInFiles(String fileDirectory) throws IOException {
+     
         ArrayList<String> fileNames = DirectoryReader.listFilesInDirectory(fileDirectory);
 
-        ArrayList<String> allWordsInFiles = new ArrayList<String>();
+        ArrayList<ArrayList<String>> allWordsInFiles = new ArrayList<ArrayList<String>>();
 
         for (String fileName: fileNames) {
             ArrayList<String> fileLines = TextReader.readLinesFromFile(fileName);
             ArrayList<String> wordsInFile = WordProcessor.tokenize(fileLines);
-            allWordsInFiles.addAll(wordsInFile);
+            allWordsInFiles.add(wordsInFile);
         }
         return allWordsInFiles;
     }
@@ -43,7 +72,6 @@ public class ProbabilityCalculator {
     }
 
     private static HashMap<String, Double> getSingleWordProbabilityTable(HashMap<String, Integer> nextWordCountTable) {
-       
         Integer totalWordCount = ProbabilityCalculator.getTotalCountInTable(nextWordCountTable);
 
         HashMap<String, Double> nextWordProbabilityTable = new HashMap<String, Double>();
@@ -58,7 +86,6 @@ public class ProbabilityCalculator {
     }
 
     public static HashMap<String, HashMap<String, Double>> buildWordProbabilityTable(HashMap<String, HashMap<String, Integer>> wordCountTable) {
-    
         HashMap<String, HashMap<String, Double>> table = new HashMap<String, HashMap<String, Double>>();
 
         for (HashMap.Entry<String, HashMap<String, Integer>> entry: wordCountTable.entrySet()) {
@@ -75,7 +102,7 @@ public class ProbabilityCalculator {
 
         String previousWord = null;
         for (String word: words) {
-            
+
             if (previousWord == null) {
                 previousWord = word;
                 continue;
@@ -96,7 +123,7 @@ public class ProbabilityCalculator {
     }
 
     public void printAllWordProbabilities() {
-  
+        
         for (HashMap.Entry<String, HashMap<String, Double>> entry: this.wordProbabilityTable.entrySet()) {
             String currWord = entry.getKey();
             HashMap<String, Double> currWordTable = entry.getValue();
@@ -111,14 +138,14 @@ public class ProbabilityCalculator {
 
 
     public static void main(String[] args) throws IOException {
-   
+       
         String fileDirectory = args[0];
-        ProbabilityCalculator wd = new ProbabilityCalculator(fileDirectory);
-        System.out.println("Words:");
-        System.out.println(wd.words);
+        ProbabilityCalculator pc = new ProbabilityCalculator(fileDirectory);
+        System.out.println("File Words:");
+        System.out.println(pc.fileWords);
         System.out.println("Word Count Table:");
-        System.out.println(wd.wordCountTable);
+        System.out.println(pc.wordCountTable);
         System.out.println("Word Probability Table:");
-        System.out.println(wd.wordProbabilityTable);
+        System.out.println(pc.wordProbabilityTable);
     }
-}
+} 
